@@ -29,11 +29,21 @@
 
 </head>
 
-<body>
+<body ng-controller="MainCtrl">
+  <!-- <nav class="menu-overlay" ng-controller="NavCtrl">
+    <div class="menu-nav-toggle">
+      <i class="mdi mdi-menu"></i>
+    </div>
+  </nav> -->
 
-  <section id="main-content" ng-view></section>
+  <canvas id="canvas" oncontextmenu="WILL.clear(); event.preventDefault();"></canvas>
 
   <script src="/js/lib/lib.min.js"></script>
+
+  <!-- MENU POPUP -->
+  <lx-dialog class="dialog dialog-center" id="menu" auto-close="false">
+    <ng-include src="'/template/modal_menu.html'"></ng-include>
+  </lx-dialog>
 
   <script type="text/javascript" src="/js/lib/js.ext.js"></script>
   <script type="text/javascript" src="/js/lib/js.ext.dom.js"></script>
@@ -47,7 +57,9 @@
   <!-- build:js /js/app.min.js -->
     <script src="/app/app.js"></script>
     <script src="/app/service/will.js"></script>
-    <script src="/app/controller/home.js"></script>
+    <script src="/app/factory/modal.js"></script>
+    <script src="/app/controller/main.js"></script>
+    <script src="/app/controller/nav.js"></script>
   <!-- endbuild -->
 
 

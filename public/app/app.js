@@ -1,5 +1,4 @@
 angular.module("davinc", [
-    "ngRoute",
     "ngSanitize",
     'ngAnimate',
     'ngAria',
@@ -8,32 +7,21 @@ angular.module("davinc", [
   ])
 
   .config([
-    '$routeProvider', '$locationProvider', '$compileProvider', '$httpProvider',
-    function($routeProvider, $locationProvider, $compileProvider, $httpProvider) {
-
+    '$locationProvider', '$compileProvider', '$httpProvider',
+    function($locationProvider, $compileProvider, $httpProvider) {
       $locationProvider.html5Mode(true);
       $locationProvider.hashPrefix('!');
-
       $compileProvider.debugInfoEnabled(false);
       $httpProvider.useApplyAsync(true);
       $httpProvider.defaults.headers.common['Cache-Control'] = 'no-cache, no-store, must-revalidate';
       $httpProvider.defaults.headers.post['Content-Type'] = 'application/json';
       $httpProvider.defaults.headers.put['Content-Type'] = 'application/json';
-
-      $routeProvider.
-      when('/', {
-        templateUrl: '/template/home.html',
-        controller: "HomeCtrl",
-      }).
-      otherwise({
-        redirectTo: '/'
-      });
     }
   ])
 
   .run([
-    "$rootScope", "$q", "$http", '$location', '$window',
-    function($rootScope, $q, $http, $location, $window) {
+    "$rootScope", "$q", "$http", '$location', '$window', 'Modal',
+    function($rootScope, $q, $http, $location, $window, Modal) {
 
       FastClick.attach(document.body);
 
@@ -58,6 +46,7 @@ angular.module("davinc", [
         loadingView: true,
         processing: false,
         browserWidth: 0,
+        modalMenu: new Modal('menu'),
       };
     }
   ]);

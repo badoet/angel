@@ -12,7 +12,6 @@ import (
 	"runtime"
 	// "time"
 
-	"github.com/fvbock/endless"
 	"github.com/gin-gonic/gin"
 	"github.com/igm/sockjs-go/sockjs"
 
@@ -81,39 +80,18 @@ func main() {
 
 	// serve index.html in root path. set this FIRST
 	r.GET("/", func(c *gin.Context) {
-		// r.GET("/", func(c *gin.Context) {
 		c.Writer.Header().Set("Cache-Control", "no-cache")
-		if IsProduction() {
-			c.File("template/indexdist.html")
-		} else {
-			c.File("template/index.html")
-		}
+		c.File("template/index.html")
 	})
 
 	// serve html partials
 	r.Static("/template", "./template")
 
 	// serve static file, if not found display index.html
-	if IsProduction() {
-		r.Use(middleware.Static("public", "template/indexdist.html")) // default to render index.html if its nt found
-		r.NoRoute(middleware.Static("public", "template/indexdist.html"))
-	} else {
-		r.Use(middleware.Static("public", "template/index.html")) // default to render index.html if its nt found
-	}
-
+	r.Use(middleware.Static("public", "template/index.html"))
 	// Listen and server on 0.0.0.0:8081
 	fmt.Printf("PORT %v\n", defaultBind)
 
-	var err error
-	if IsProduction() {
-		err = endless.ListenAndServe(defaultBind, r)
-		if err != nil {
-			fmt.Println(err)
-		}
-		fmt.Println("Server on " + defaultBind + " stopped")
-		os.Exit(0)
-	} else {
-		r.Run(defaultBind)
-	}
+	r.Run(defaultBind)
 
 }

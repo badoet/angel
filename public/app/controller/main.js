@@ -1,10 +1,10 @@
 angular.module('davinc')
-  .controller('HomeCtrl', [
+  .controller('MainCtrl', [
 
-    '$scope', '$rootScope', '$routeParams', '$timeout',
+    '$scope', '$rootScope', '$timeout',
     '$http', '$location', 'Will',
 
-    function($scope, $rootScope, $routeParams, $timeout,
+    function($scope, $rootScope, $timeout,
       $http, $location, Will) {
 
       Module.addPostScript(function() {

@@ -16,7 +16,10 @@ angular.module('davinc')
       };
 
       this.initInkEngine = function(width, height) {
-        self.canvas = new Module.InkCanvas(document.getElementById("canvas"), width, height);
+        canvas = document.getElementById("canvas");
+        console.log(canvas);
+        self.canvas = new Module.InkCanvas(canvas, width, height);
+        console.log(self.canvas);
         self.strokesLayer = self.canvas.createLayer();
 
         self.clear();
