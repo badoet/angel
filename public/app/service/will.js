@@ -59,7 +59,6 @@ angular.module('davinc')
 
       this.setStrokeConfig = function() {
         self.brush = new Module.SolidColorBrush();
-        console.log(self.color);
         self.strokeRenderer.configure({brush: self.brush, color: self.color});
       };
 
@@ -68,7 +67,6 @@ angular.module('davinc')
         $(Module.canvas).on("mousemove", function(e) {self.moveStroke(e);});
         $(document).on("mouseup", function(e) {self.endStroke(e);});
         canvas.oncontextmenu = function(e) {
-          console.log("UNDO");
           self.undo();
           e.preventDefault();
         };
