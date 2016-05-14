@@ -8,6 +8,11 @@ body {
 }
 canvas {
   border: 0px none;
-  cursor: url("/image/brush.png") 0 64, pointer;
+  &.brush {
+    cursor: url("/image/icons/brush.png") 0 64, pointer;
+  }
+  &.eraser {
+    cursor: url("/image/icons/eraser.png") 0 56, pointer;
+  }
 }
 h2, p {margin-left: 20px;}

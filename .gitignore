@@ -16,7 +16,7 @@
 .bowerrc
 .jsbeautifyrc
 
-
+/public/css/davinc.css
 gin-bin
 main
 bin

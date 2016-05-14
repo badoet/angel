@@ -32,7 +32,27 @@ angular.module('davinc')
 
         self.smoothener = new Module.MultiChannelSmoothener(self.pathBuilder.stride);
 
+        // self.brushColor = Module.Color.from(204, 204, 204);
+        // self.eraserColor = Module.Color.TRANSPARENT;
+        // self.color = self.brushColor;
+
         self.strokeRenderer = new Module.StrokeRenderer(self.canvas);
+        self.useBrush(); // use brush as default
+      };
+
+      this.useBrush = function() {
+        self.color = Module.Color.from(204, 204, 204);
+        $rootScope.state.brush = "brush";
+        self.setStrokeConfig();
+      };
+
+      this.useBrush = function() {
+        self.color = Module.Color.TRANSPARENT;
+        $rootScope.state.brush = "eraser";
+        self.setStrokeConfig();
+      };
+
+      this.setStrokeConfig = function() {
         self.strokeRenderer.configure({brush: self.brush, color: self.color});
       };
 
