@@ -15,6 +15,14 @@ angular.module('davinc')
         Will.clear();
       };
 
+      $scope.useBrush = function() {
+        Will.useBrush();
+      };
+
+      $scope.useEraser = function() {
+        Will.useEraser();
+      };
+
       window.prerenderReady = true;
     }
   ]);

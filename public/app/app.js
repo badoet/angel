@@ -48,7 +48,8 @@ angular.module("davinc", [
         processing: false,
         browserWidth: 0,
         modalMenu: new Modal('menu'),
-        openedModal: {}
+        openedModal: {},
+        brush: "brush"
       };
     }
   ]);

@@ -1,13 +1,16 @@
 angular.module('davinc')
   .service('Will', [
-    '$rootScope',
+    '$rootScope', "$timeout",
 
-    function($rootScope) {
+    function($rootScope, $timeout) {
 
       var self = this;
 
-      self.backgroundColor = Module.Color.TRANSPARENT;
-      self.color = Module.Color.from(204, 204, 204);
+      self.backgroundColor = Module.Color.TRANSPERENT;
+      self.brushColor = Module.Color.from(204, 204, 204);
+      self.eraserColor =  Module.Color.from(255, 255, 255);
+
+      self.color = self.brushColor;
       self.strokes = [];
       var canvas = document.getElementById("canvas");
 
@@ -24,7 +27,9 @@ angular.module('davinc')
 
         self.clear();
 
-        self.brush = new Module.SolidColorBrush();
+        self.blendNormal = Module.BlendMode.NORMAL;
+        self.blendErase = Module.BlendMode.ERASE;
+        self.blend = self.blendNormal;
 
         self.pathBuilder = new Module.SpeedPathBuilder();
         self.pathBuilder.setNormalizationConfig(5, 210);
@@ -32,27 +37,29 @@ angular.module('davinc')
 
         self.smoothener = new Module.MultiChannelSmoothener(self.pathBuilder.stride);
 
-        // self.brushColor = Module.Color.from(204, 204, 204);
-        // self.eraserColor = Module.Color.TRANSPARENT;
-        // self.color = self.brushColor;
-
         self.strokeRenderer = new Module.StrokeRenderer(self.canvas);
         self.useBrush(); // use brush as default
       };
 
       this.useBrush = function() {
-        self.color = Module.Color.from(204, 204, 204);
+        self.color = self.brushColor;
+        self.blend = self.blendNormal;
         $rootScope.state.brush = "brush";
+        self.pathBuilder.setPropertyConfig(Module.PropertyName.Width, 1, 3.2, NaN, NaN, Module.PropertyFunction.Sigmoid, 0.6, true);
         self.setStrokeConfig();
       };
 
-      this.useBrush = function() {
-        self.color = Module.Color.TRANSPARENT;
+      this.useEraser = function() {
+        self.color = self.eraserColor;
+        self.blend = self.blendErase;
         $rootScope.state.brush = "eraser";
+        self.pathBuilder.setPropertyConfig(Module.PropertyName.Width, 10, 20, NaN, NaN, Module.PropertyFunction.Sigmoid, 0.6, true);
         self.setStrokeConfig();
       };
 
       this.setStrokeConfig = function() {
+        self.brush = new Module.SolidColorBrush();
+        console.log(self.color);
         self.strokeRenderer.configure({brush: self.brush, color: self.color});
       };
 
@@ -141,7 +148,7 @@ angular.module('davinc')
         }
         else if (self.inputPhase == Module.InputPhase.End) {
           self.strokeRenderer.draw(self.pathPart, true);
-          self.strokeRenderer.blendStroke(self.userLayer, Module.BlendMode.NORMAL);
+          self.strokeRenderer.blendStroke(self.userLayer, self.blend);
 
           self.canvas.clear(self.strokeRenderer.strokeBounds, self.backgroundColor);
           self.canvas.blend(self.userLayer, {rect: self.strokeRenderer.strokeBounds});
@@ -173,8 +180,8 @@ angular.module('davinc')
 
       this.clear = function() {
         self.strokes = [];
-        self.userLayer.clear(self.backgroundColor);
-        self.canvas.clear(self.backgroundColor);
+        self.userLayer.clear();
+        self.canvas.clear();
       };
 
       return this;
