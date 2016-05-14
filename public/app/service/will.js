@@ -6,9 +6,10 @@ angular.module('davinc')
 
       var self = this;
 
-      self.backgroundColor = Module.Color.WHITE;
+      self.backgroundColor = Module.Color.TRANSPARENT;
       self.color = Module.Color.from(204, 204, 204);
       self.strokes = [];
+      var canvas = document.getElementById("canvas");
 
       this.init = function(width, height) {
         self.initInkEngine(width, height);
@@ -16,11 +17,10 @@ angular.module('davinc')
       };
 
       this.initInkEngine = function(width, height) {
-        canvas = document.getElementById("canvas");
-        console.log(canvas);
+
         self.canvas = new Module.InkCanvas(canvas, width, height);
-        console.log(self.canvas);
-        self.strokesLayer = self.canvas.createLayer();
+        self.teacherLayer = self.canvas.createLayer();
+        self.userLayer = self.canvas.createLayer();
 
         self.clear();
 
@@ -40,6 +40,11 @@ angular.module('davinc')
         $(Module.canvas).on("mousedown", function(e) {self.beginStroke(e);});
         $(Module.canvas).on("mousemove", function(e) {self.moveStroke(e);});
         $(document).on("mouseup", function(e) {self.endStroke(e);});
+        canvas.oncontextmenu = function(e) {
+          console.log("UNDO");
+          self.undo();
+          e.preventDefault();
+        };
       };
 
       this.beginStroke = function(e) {
@@ -110,23 +115,48 @@ angular.module('davinc')
           self.strokeRenderer.drawPreliminary(self.preliminaryPathPart);
 
           self.canvas.clear(self.strokeRenderer.updatedArea, self.backgroundColor);
-          self.canvas.blend(self.strokesLayer, {rect: self.strokeRenderer.updatedArea});
+          self.canvas.blend(self.userLayer, {rect: self.strokeRenderer.updatedArea});
 
           self.strokeRenderer.blendUpdatedArea();
         }
         else if (self.inputPhase == Module.InputPhase.End) {
           self.strokeRenderer.draw(self.pathPart, true);
-          self.strokeRenderer.blendStroke(self.strokesLayer, Module.BlendMode.NORMAL);
+          self.strokeRenderer.blendStroke(self.userLayer, Module.BlendMode.NORMAL);
 
           self.canvas.clear(self.strokeRenderer.strokeBounds, self.backgroundColor);
-          self.canvas.blend(self.strokesLayer, {rect: self.strokeRenderer.strokeBounds});
+          self.canvas.blend(self.userLayer, {rect: self.strokeRenderer.strokeBounds});
         }
+      };
+
+      this.undo = function() {
+        self.strokes.pop();
+        self.redraw(self.strokes.bounds);
+      };
+
+      this.redraw = function(dirtyArea) {
+        if (!dirtyArea) dirtyArea = self.canvas.bounds;
+        dirtyArea = Module.RectTools.ceil(dirtyArea);
+        self.userLayer.clear(self.backgroundColor);
+        self.canvas.clear(self.backgroundColor);
+        self.strokes.forEach(function(stroke) {
+          var affectedArea = Module.RectTools.intersect(stroke.bounds, dirtyArea);
+
+          if (affectedArea) {
+            this.strokeRenderer.draw(stroke);
+            this.strokeRenderer.blendStroke(self.userLayer, stroke.blendMode);
+          }
+        }, self);
+
+        self.refresh(dirtyArea);
+      };
+
+      this.refresh = function(dirtyArea) {
+        self.canvas.blend(self.userLayer, {rect: Module.RectTools.ceil(dirtyArea)});
       };
 
       this.clear = function() {
         self.strokes = [];
-
-        self.strokesLayer.clear(self.backgroundColor);
+        self.userLayer.clear(self.backgroundColor);
         self.canvas.clear(self.backgroundColor);
       };
 

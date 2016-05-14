@@ -16,8 +16,8 @@
 }
 
 .dialog#menu {
-  max-width: 600px;
-  max-height: 400px;
+  max-width: 640px;
+  max-height: 440px;
   width: 100%;
   color: $black;
   display: block;
@@ -26,10 +26,20 @@
   right: 0;
   bottom: 0;
   top: 0;
+  h1 {
+    text-align: center;
+    padding: 0.5rem;
+  }
+  li {
+    padding: 1rem 0.5rem;
+  }
 }
 
 .dialog {
   visibility: hidden;
+  box-shadow: 0 0 2px 2px rgba(255,255,255,0.95);
+  padding: 1rem;
+  border-radius: 0.2rem;
 }
 
 .dialog--is-shown {

@@ -3,7 +3,11 @@ body {
   overflow: hidden !important;
   margin: 0;
   padding: 0;
-  background-color: $black;
+  background: url("/image/bg_white_paper.jpg") $white no-repeat;
+  background-size: cover;
 }
-canvas {border: 0px none; cursor: pointer;}
+canvas {
+  border: 0px none;
+  cursor: pointer;
+}
 h2, p {margin-left: 20px;}
