@@ -1,0 +1,34 @@
+{
+  "name": "davinc",
+  "version": "0.0.1",
+  "description": "you can draw too",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:badoet/angel.git"
+  },
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "badoet",
+  "license": "MIT",
+  "devDependencies": {
+    "bower": "latest",
+    "grunt": "latest",
+    "grunt-contrib-clean": "latest",
+    "grunt-contrib-concat": "latest",
+    "grunt-contrib-copy": "latest",
+    "grunt-contrib-cssmin": "latest",
+    "grunt-contrib-jshint": "latest",
+    "grunt-contrib-uglify": "latest",
+    "grunt-contrib-watch": "latest",
+    "grunt-html2js": "latest",
+    "grunt-preprocess": "latest",
+    "grunt-rev": "latest",
+    "grunt-sass": "latest",
+    "grunt-shell": "latest",
+    "grunt-usemin": "latest",
+    "load-grunt-tasks": "latest",
+    "node-sass": "latest"
+  }
+}

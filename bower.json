@@ -1,0 +1,36 @@
+{
+  "name": "davinc",
+  "version": "1.0.0",
+  "authors": [
+    "Stanley Gunawan <gunawan.stanley@gmail.com>"
+  ],
+  "moduleType": [
+    "amd"
+  ],
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "jquery": "2.2.3",
+    "mdi": "latest",
+    "lumx": "0.3.96",
+    "bootstrap-sass": "latest",
+    "angular": "1.5.3",
+    "angular-route": "1.5.3",
+    "angular-sanitize": "1.5.3",
+    "angular-animate": "1.5.3",
+    "angular-aria": "1.5.3",
+    "angular-messages": "1.5.3",
+    "fastclick": "latest"
+  },
+  "resolutions": {
+    "jquery": "2.2.3",
+    "angular": "1.5.3",
+    "angular-route": "1.5.3",
+    "angular-sanitize": "1.5.3"
+  }
+}
