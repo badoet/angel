@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en-us" class="no-js">
+<html lang="en-us" class="no-js" ng-app="davinc">
 <head>
 
   <script>
@@ -19,18 +19,7 @@
   <title ng-bind="state.pageTitle">Davinc</title>
   <link rel="shortcut icon" href="favicon.ico">
 
-  <script type="text/javascript" src="/js/lib/jquery.min.js"></script>
-
-  <script type="text/javascript" src="/js/lib/js.ext.js"></script>
-  <script type="text/javascript" src="/js/lib/js.ext.dom.js"></script>
-
-  <script type="text/javascript" src="/js/lib/Module.js"></script>
-  <script async type="text/javascript" src="/js/lib/WacomInkEngine.js"></script>
-
-  <script type="text/javascript" src='/js/lib/requestAnimationFrame.js'></script>
-  <script type="text/javascript" src="/js/lib/modernizr-custom.js"></script>
-
-  <script type="text/javascript" src="/js/Part1.js"></script>
+  <link rel="stylesheet" type="text/css" href="/css/davinc.css" />
 
   <style type="text/css">
     body {position: relative; overflow: hidden; margin: 0; padding: 0; background-color: #252525; color: white;}
@@ -42,12 +31,24 @@
 
 <body>
 
-  <canvas id="canvas" oncontextmenu="WILL.clear(); event.preventDefault();"></canvas>
+  <!-- <canvas id="canvas" oncontextmenu="WILL.clear(); event.preventDefault();"></canvas> -->
+  <section id="main-content" ng-view></section>
 
+  <script src="/js/lib/lib.min.js"></script>
 
+  <script type="text/javascript" src="/js/lib/js.ext.js"></script>
+  <script type="text/javascript" src="/js/lib/js.ext.dom.js"></script>
+
+  <script type="text/javascript" src="/js/lib/Module.js"></script>
+  <script async type="text/javascript" src="/js/lib/WacomInkEngine.js"></script>
+
+  <script type="text/javascript" src='/js/lib/requestAnimationFrame.js'></script>
+  <script type="text/javascript" src="/js/lib/modernizr-custom.js"></script>
 
   <!-- build:js /js/app.min.js -->
-
+    <script src="/app/app.js"></script>
+    <script src="/app/service/will.js"></script>
+    <script src="/app/controller/home.js"></script>
   <!-- endbuild -->
 
 

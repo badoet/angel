@@ -1,0 +1,110 @@
+$light-grey: #f8f8eb;
+$light-grey2: #D7D7D7;
+$light-grey3: #909090;
+$light-grey4: #6C6C6C;
+$light-grey5: #333;
+
+$white: #FFFFFF;
+$green: #9AD7DA;
+$pink: #F6A2C6;
+$grey: #4a4a48;
+
+$light-leather: #f9e7a7;
+$dark-leather: #be9539;
+
+$dark-purple: #37242C;
+$dark-red: #903725;
+$bright-pink: #F7599D;
+$dark-teal: #568B8D;
+
+$greylight: #ACABA9;
+$pink-dark: #EE374F;
+$light-blue: #24BCD4;
+$darker-light-blue: #1CAAC1;
+$light-green: #70D319;
+$darker-light-green: #68BC3A;
+$light-red: #EE374F;
+$darker-light-red: #D62A41;
+$bg-color: #FFFFFF;
+$orange: #F48376;
+
+/* Overwrite BOOTSTRAP CONFIG */
+$font-family-sans-serif:  "Khula", "Calibri Light", 'Calibri', 'Arial', sans-serif;
+$font-size-base:          16px;
+$body-bg:                 $bg-color;
+$text-color:              $grey;
+$link-color:              $light-grey4;
+$link-hover-color:        $pink;
+$link-hover-decoration:   none;
+
+@mixin inline() {
+  vertical-align: top;
+  display: inline-block;
+  display: moz-inline-block;
+  zoom: 1;
+  *display: inline;
+}
+
+@mixin bold() {
+  text-shadow: 0 0 .65px #aaa, 0 0 .65px #aaa;
+}
+
+@mixin drop-text-shadow() {
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.4);
+}
+
+@mixin light-text-shadow() {
+  text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.2);
+}
+
+@mixin light-box-shadow() {
+  box-shadow: 1px 1px 1px rgba(0, 0, 0, 0.2);
+}
+
+[ng\:cloak], [ng-cloak], [data-ng-cloak], [x-ng-cloak], .ng-cloak, .x-ng-cloak {
+  display: none !important;
+}
+
+.p0 {
+  padding: 0;
+}
+
+.bg-green {
+  background-color: $green;
+}
+
+.bg-pink {
+  background-color: $pink;
+}
+
+.bg-grey {
+  background-color: $light-grey;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.accentuate {
+  letter-spacing: .2em;
+  text-transform: capitalize;
+}
+
+.inline-element {
+  @include inline();
+}
+
+.uppercase {
+  text-transform: uppercase;
+}
+
+.drop-text-shadow{
+  @include drop-text-shadow();
+}
+
+.toolbar {
+  font-weight: 600;
+  &.bg-green {
+    color: $grey;
+  }
+}

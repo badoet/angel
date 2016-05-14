@@ -1,0 +1,26 @@
+.visible-xxs {
+  display: none !important;
+  @media (max-width: 480px) {
+    display: block !important;
+  }
+}
+
+.hidden-xxs {
+  display: block !important;
+  @media (max-width: 480px) {
+    display: none !important;
+  }
+}
+
+
+.col-xxs-12 {
+  @media (max-width: 480px) {
+    width: 100%;
+  }
+}
+
+.col-xxs-6 {
+  @media (max-width: 480px) {
+    width: 50%;
+  }
+}

@@ -1,0 +1,42 @@
+// MAIN Config Override
+@import "settings/common";
+
+// Bootstrap scss
+@import "../bower_components/bootstrap-sass/assets/stylesheets/bootstrap/variables";
+
+// Utilities
+@import "../bower_components/bootstrap-sass/assets/stylesheets/bootstrap/mixins/responsive-visibility";
+@import "../bower_components/bootstrap-sass/assets/stylesheets/bootstrap/mixins/text-overflow";
+@import "../bower_components/bootstrap-sass/assets/stylesheets/bootstrap/mixins/vendor-prefixes";
+@import "../bower_components/bootstrap-sass/assets/stylesheets/bootstrap/mixins/tab-focus";
+@import "../bower_components/bootstrap-sass/assets/stylesheets/bootstrap/mixins/image";
+@import "../bower_components/bootstrap-sass/assets/stylesheets/bootstrap/mixins/text-emphasis";
+@import "../bower_components/bootstrap-sass/assets/stylesheets/bootstrap/mixins/hide-text";
+
+// Skins
+@import "../bower_components/bootstrap-sass/assets/stylesheets/bootstrap/mixins/background-variant";
+@import "../bower_components/bootstrap-sass/assets/stylesheets/bootstrap/mixins/border-radius";
+@import "../bower_components/bootstrap-sass/assets/stylesheets/bootstrap/mixins/gradients";
+
+// Layout
+@import "../bower_components/bootstrap-sass/assets/stylesheets/bootstrap/mixins/clearfix";
+@import "../bower_components/bootstrap-sass/assets/stylesheets/bootstrap/mixins/center-block";
+@import "../bower_components/bootstrap-sass/assets/stylesheets/bootstrap/mixins/nav-vertical-align";
+@import "../bower_components/bootstrap-sass/assets/stylesheets/bootstrap/mixins/grid-framework";
+@import "../bower_components/bootstrap-sass/assets/stylesheets/bootstrap/mixins/grid";
+
+@import "../bower_components/bootstrap-sass/assets/stylesheets/bootstrap/normalize";
+@import "../bower_components/bootstrap-sass/assets/stylesheets/bootstrap/scaffolding";
+@import "../bower_components/bootstrap-sass/assets/stylesheets/bootstrap/type";
+@import "../bower_components/bootstrap-sass/assets/stylesheets/bootstrap/code";
+@import "../bower_components/bootstrap-sass/assets/stylesheets/bootstrap/grid";
+@import "../bower_components/bootstrap-sass/assets/stylesheets/bootstrap/utilities";
+@import "../bower_components/bootstrap-sass/assets/stylesheets/bootstrap/responsive-utilities";
+
+@import "settings/responsive";
+@import "../bower_components/lumx/dist/scss/lumx";
+
+
+@import "main";
+@import "home";
+@import "gallery";
