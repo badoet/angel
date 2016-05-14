@@ -3,6 +3,7 @@ angular.module("davinc", [
     'ngAnimate',
     'ngAria',
     'ngMessages',
+    "ngRoute",
     "lumx",
   ])
 
@@ -47,6 +48,7 @@ angular.module("davinc", [
         processing: false,
         browserWidth: 0,
         modalMenu: new Modal('menu'),
+        openedModal: {}
       };
     }
   ]);

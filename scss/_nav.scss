@@ -1,0 +1,37 @@
+.menu-overlay {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background-color: $black;
+  padding: 0.5rem;
+  border-radius: 2rem;
+  font-size: 2rem;
+}
+
+.menu-nav-toggle {
+  line-height: 0;
+  cursor: pointer;
+  outline: none;
+  color: $light-grey;
+}
+
+.dialog#menu {
+  max-width: 600px;
+  max-height: 400px;
+  width: 100%;
+  color: $black;
+  display: block;
+  margin: auto;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  top: 0;
+}
+
+.dialog {
+  visibility: hidden;
+}
+
+.dialog--is-shown {
+  visibility: visible;
+}

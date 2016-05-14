@@ -1,0 +1,9 @@
+body {
+  position: relative;
+  overflow: hidden !important;
+  margin: 0;
+  padding: 0;
+  background-color: $black;
+}
+canvas {border: 0px none; cursor: pointer;}
+h2, p {margin-left: 20px;}

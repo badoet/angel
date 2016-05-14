@@ -21,29 +21,18 @@
 
   <link rel="stylesheet" type="text/css" href="/css/davinc.css" />
 
-  <style type="text/css">
-    body {position: relative; overflow: hidden; margin: 0; padding: 0; background-color: #252525; color: white;}
-    canvas {border: 0px none;}
-    h2, p {margin-left: 20px;}
-  </style>
-
 </head>
 
 <body ng-controller="MainCtrl">
-  <!-- <nav class="menu-overlay" ng-controller="NavCtrl">
-    <div class="menu-nav-toggle">
+  <nav class="menu-overlay" ng-controller="NavCtrl">
+    <div class="menu-nav-toggle" ng-click="openNav()">
       <i class="mdi mdi-menu"></i>
     </div>
-  </nav> -->
+  </nav>
 
-  <canvas id="canvas" oncontextmenu="WILL.clear(); event.preventDefault();"></canvas>
+  <canvas id="canvas" oncontextmenu="WILL.clear(); event.preventDefault();" width="1600" height="600"></canvas>
 
   <script src="/js/lib/lib.min.js"></script>
-
-  <!-- MENU POPUP -->
-  <lx-dialog class="dialog dialog-center" id="menu" auto-close="false">
-    <ng-include src="'/template/modal_menu.html'"></ng-include>
-  </lx-dialog>
 
   <script type="text/javascript" src="/js/lib/js.ext.js"></script>
   <script type="text/javascript" src="/js/lib/js.ext.dom.js"></script>
@@ -61,6 +50,11 @@
     <script src="/app/controller/main.js"></script>
     <script src="/app/controller/nav.js"></script>
   <!-- endbuild -->
+
+  <!-- MENU POPUP -->
+  <lx-dialog class="dialog dialog-center" id="menu" auto-close="true">
+    <ng-include src="'/template/modal_menu.html'"></ng-include>
+  </lx-dialog>
 
 
 </body>
