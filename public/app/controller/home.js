@@ -11,6 +11,10 @@ angular.module('davinc')
         Will.init(1600, 600);
       });
 
+      $scope.clear = function() {
+        Will.clear();
+      };
+
       window.prerenderReady = true;
     }
   ]);

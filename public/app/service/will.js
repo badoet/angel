@@ -8,7 +8,7 @@ angular.module('davinc')
 
       self.backgroundColor = Module.Color.WHITE;
       self.color = Module.Color.from(204, 204, 204);
-      self.strokes = new Array();
+      self.strokes = [];
 
       this.init = function(width, height) {
         self.initInkEngine(width, height);
@@ -40,13 +40,13 @@ angular.module('davinc')
       };
 
       this.beginStroke = function(e) {
-        if (e.button != 0) return;
+        if (e.button !== 0) return;
 
         self.inputPhase = Module.InputPhase.Begin;
 
         self.buildPath({x: e.clientX, y: e.clientY});
         self.drawPath();
-      },
+      };
 
       this.moveStroke = function(e) {
         if (!self.inputPhase) return;
@@ -54,7 +54,7 @@ angular.module('davinc')
         self.inputPhase = Module.InputPhase.Move;
         self.pointerPos = {x: e.clientX, y: e.clientY};
 
-        if (self.frameID != self.canvas.frameID) {
+        if (self.frameID !== self.canvas.frameID) {
           self.frameID = self.canvas.requestAnimationFrame(function() {
             if (self.inputPhase && self.inputPhase == Module.InputPhase.Move) {
               self.buildPath(self.pointerPos);
@@ -121,7 +121,7 @@ angular.module('davinc')
       };
 
       this.clear = function() {
-        self.strokes = new Array();
+        self.strokes = [];
 
         self.strokesLayer.clear(self.backgroundColor);
         self.canvas.clear(self.backgroundColor);
