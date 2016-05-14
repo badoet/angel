@@ -129,24 +129,21 @@ angular.module('davinc')
       };
 
       this.undo = function() {
-        self.strokes.pop();
-        self.redraw(self.strokes.bounds);
+        removedStroke = self.strokes.pop();
+        self.redraw(removedStroke.bounds);
       };
 
       this.redraw = function(dirtyArea) {
         if (!dirtyArea) dirtyArea = self.canvas.bounds;
         dirtyArea = Module.RectTools.ceil(dirtyArea);
-        self.userLayer.clear(self.backgroundColor);
-        self.canvas.clear(self.backgroundColor);
+        self.userLayer.clear(dirtyArea);
+        self.canvas.clear(dirtyArea);
         self.strokes.forEach(function(stroke) {
-          var affectedArea = Module.RectTools.intersect(stroke.bounds, dirtyArea);
-
-          if (affectedArea) {
+          if (Module.RectTools.intersect(stroke.bounds, dirtyArea)) {
             this.strokeRenderer.draw(stroke);
             this.strokeRenderer.blendStroke(self.userLayer, stroke.blendMode);
           }
         }, self);
-
         self.refresh(dirtyArea);
       };
 

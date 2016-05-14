@@ -8,6 +8,6 @@ body {
 }
 canvas {
   border: 0px none;
-  cursor: pointer;
+  cursor: url("/image/brush.png"), pointer;
 }
 h2, p {margin-left: 20px;}
