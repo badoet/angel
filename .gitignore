@@ -1,5 +1,4 @@
 /.tmp
-
 /dist
 /main
 /node_modules
@@ -29,3 +28,4 @@ davinc.css
 *.lib.min.js
 *all.ikou.css
 /public/app/template.js
+main.exe
