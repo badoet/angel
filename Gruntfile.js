@@ -150,8 +150,6 @@ module.exports = function(grunt) {
       },
       libjs: {
         src: [
-          'bower_components/jquery/dist/jquery.min.js',
-          'bower_components/velocity/velocity.min.js',
           'bower_components/angular/angular.js',
           'bower_components/angular-animate/angular-animate.min.js',
           'bower_components/angular-aria/angular-aria.min.js',

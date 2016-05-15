@@ -6,7 +6,6 @@ angular.module('davinc')
 
       var self = this;
 
-
       self.strokes = [];
       self.redrawStrokesArray = [];
 
@@ -18,9 +17,9 @@ angular.module('davinc')
         self.redrawIntervalId = -1;
         self.canUpdate = false;
 
-        self.backgroundColor = Module.Color.TRANSPERENT;
-        self.brushColor = Module.Color.from(204, 204, 204);
-        self.eraserColor =  Module.Color.from(255, 255, 255);
+        self.backgroundColor = Module.color.TRANSPERENT;
+        self.brushColor = Module.color.from(255, 100, 100);
+        self.eraserColor =  Module.color.from(255, 255, 255);
 
         self.color = self.brushColor;
 
@@ -30,43 +29,46 @@ angular.module('davinc')
 
       this.initInkEngine = function(width, height) {
 
-        self.canvas = new Module.InkCanvas(canvas, width, height);
+        self.canvas = new Module.InkCanvas(width, height);
         self.teacherLayer = self.canvas.createLayer();
         self.autoDrawLayer = self.canvas.createLayer();
         self.userLayer = self.canvas.createLayer();
-
-        // self.clear();
-
-
-        // init auto draw brush
-        self.autoDrawBrush = new Module.DirectBrush();
-        //this.autoDrawStrokeRenderer = new Module.StrokeRenderer(this.canvas, this.autoDrawLayer);
-        self.autoDrawStrokeRenderer = new Module.StrokeRenderer(self.canvas, self.canvas);
-        self.autoDrawStrokeRenderer.configure({brush: self.autoDrawBrush, color: this.color});
 
         self.blendNormal = Module.BlendMode.NORMAL;
         self.blendErase = Module.BlendMode.ERASE;
         self.blend = self.blendNormal;
 
-        self.pathBuilder = new Module.SpeedPathBuilder();
-        self.pathBuilder.setNormalizationConfig(5, 210);
-        self.pathBuilder.setPropertyConfig(Module.PropertyName.Width, 1, 3.2, NaN, NaN, Module.PropertyFunction.Sigmoid, 0.6, true);
+        // self.pathBuilder = new Module.SpeedPathBuilder();
+        // self.pathBuilder.setNormalizationConfig(5, 210);
 
-        self.smoothener = new Module.MultiChannelSmoothener(self.pathBuilder.stride);
+        self.speedPathBuilder = new Module.SpeedPathBuilder();
+        self.speedPathBuilder.setNormalizationConfig(182, 3547);
+        self.speedPathBuilder.setPropertyConfig(Module.PropertyName.Width, 4.05, 34.53, 0.72, NaN, Module.PropertyFunction.Power, 1.19, false);
+
+        if (window.PointerEvent) {
+          self.pressurePathBuilder = new Module.PressurePathBuilder();
+          self.pressurePathBuilder.setNormalizationConfig(0.195, 0.88);
+          self.pressurePathBuilder.setPropertyConfig(Module.PropertyName.Width, 4.05, 34.53, 0.72, NaN, Module.PropertyFunction.Power, 1.19, false);
+        }
+
+        self.smoothener = new Module.MultiChannelSmoothener(self.speedPathBuilder.stride);
 
         self.strokeRenderer = new Module.StrokeRenderer(self.canvas);
         self.useBrush(); // use brush as default
 
-        Module.InkDecoder.getStrokeBrush = function(paint) {
-          return self.brush;
-        };
+        // init auto draw brush
+        self.autoDrawBrush = new Module.DirectBrush();
+        self.autoDrawStrokeRenderer = new Module.StrokeRenderer(self.canvas);
+
+        self.clear();
       };
 
       this.useBrush = function() {
         self.color = self.brushColor;
         self.blend = self.blendNormal;
         $rootScope.state.brush = "brush";
-        self.pathBuilder.setPropertyConfig(Module.PropertyName.Width, 1, 3.2, NaN, NaN, Module.PropertyFunction.Sigmoid, 0.6, true);
+        self.pathBuilder = isNaN(self.pressure)?self.speedPathBuilder:self.pressurePathBuilder;
+        self.pathBuilder.setPropertyConfig(Module.PropertyName.Width, 4, 3.2, NaN, NaN, Module.PropertyFunction.Sigmoid, 1, true);
         self.setStrokeConfig();
       };
 
@@ -74,6 +76,7 @@ angular.module('davinc')
         self.color = self.eraserColor;
         self.blend = self.blendErase;
         $rootScope.state.brush = "eraser";
+        self.pathBuilder = isNaN(self.pressure)?self.speedPathBuilder:self.pressurePathBuilder;
         self.pathBuilder.setPropertyConfig(Module.PropertyName.Width, 10, 20, NaN, NaN, Module.PropertyFunction.Sigmoid, 0.6, true);
         self.setStrokeConfig();
       };
@@ -84,55 +87,79 @@ angular.module('davinc')
       };
 
       this.initEvents = function() {
-        $(Module.canvas).on("mousedown", function(e) {self.beginStroke(e);});
-        $(Module.canvas).on("mousemove", function(e) {self.moveStroke(e);});
-        $(document).on("mouseup", function(e) {self.endStroke(e);});
-        canvas.oncontextmenu = function(e) {
+        if (window.PointerEvent) {
+          Module.canvas.addEventListener("pointerdown", function(e) {self.beginStroke(e);});
+          Module.canvas.addEventListener("pointermove", function(e) {self.moveStroke(e);});
+          document.addEventListener("pointerup", function(e) {self.endStroke(e);});
+        }
+        else {
+          Module.canvas.addEventListener("mousedown", function(e) {self.beginStroke(e);});
+          Module.canvas.addEventListener("mousemove", function(e) {self.moveStroke(e);});
+          document.addEventListener("mouseup", function(e) {self.endStroke(e);});
+
+          if (window.TouchEvent) {
+            Module.canvas.addEventListener("touchstart", function(e) {self.beginStroke(e);});
+            Module.canvas.addEventListener("touchmove", function(e) {self.moveStroke(e);});
+            document.addEventListener("touchend", function(e) {self.endStroke(e);});
+          }
+        }
+        Module.canvas.oncontextmenu = function(e) {
           self.undo();
           e.preventDefault();
         };
       };
 
-      this.beginStroke = function(e) {
+      this.getPressure = function(e) {
+        return (window.PointerEvent && e instanceof PointerEvent && e.pressure !== 0.5)?e.pressure:NaN;
+      };
+
+      this.beginStroke =  function(e) {
         if (e.button !== 0) return;
 
         self.inputPhase = Module.InputPhase.Begin;
+        self.pressure = self.getPressure(e);
+        self.pathBuilder = isNaN(self.pressure)?self.speedPathBuilder:self.pressurePathBuilder;
 
         self.buildPath({x: e.clientX, y: e.clientY});
-        self.drawPath();
+        self.strokeRenderer.draw(self.pathPart, true);
+        self.strokeRenderer.blendUpdatedArea();
       };
 
       this.moveStroke = function(e) {
         if (!self.inputPhase) return;
 
-        self.inputPhase = Module.InputPhase.Move;
         self.pointerPos = {x: e.clientX, y: e.clientY};
 
-        if (self.frameID !== self.canvas.frameID) {
-          self.frameID = self.canvas.requestAnimationFrame(function() {
-            if (self.inputPhase && self.inputPhase == Module.InputPhase.Move) {
-              self.buildPath(self.pointerPos);
-              self.drawPath();
-            }
-          }, true);
-        }
+        self.inputPhase = Module.InputPhase.Move;
+        self.pressure = self.getPressure(e);
+        if (self.intervalID) return;
+
+        var lastPointerPos = self.pointerPos;
+        self.drawPoint();
+
+        self.intervalID = setInterval(function() {
+          if (self.inputPhase && lastPointerPos != self.pointerPos) {
+            self.drawPoint();
+            lastPointerPos = self.pointerPos;
+          }
+        }, 16);
       };
 
       this.endStroke = function(e) {
-        if (self.redrawStrokesArray.length > 0 && self.canUpdate === true) {
-          self.drawToAutoStrokeId += 2;
-        }
-
-        if (self.redrawIntervalId == -1) {
-          self.redrawStroke(self.currentStrokeId);
-        }
-
         if (!self.inputPhase) return;
 
         self.inputPhase = Module.InputPhase.End;
+        self.pressure = self.getPressure(e);
+
+        clearInterval(self.intervalID);
+        delete self.intervalID;
 
         self.buildPath({x: e.clientX, y: e.clientY});
-        self.drawPath();
+        self.strokeRenderer.draw(self.pathPart, true);
+        self.strokeRenderer.blendStroke(self.userLayer, self.blend);
+
+        self.canvas.clearArea(self.strokeRenderer.updatedArea, self.backgroundColor);
+        self.canvas.blendWithRect(self.userLayer, self.strokeRenderer.updatedArea, Module.BlendMode.NORMAL);
 
         var stroke = new Module.Stroke(self.brush, self.path, NaN, self.color, 0, 1);
         self.strokes.push(stroke);
@@ -144,42 +171,30 @@ angular.module('davinc')
         if (self.inputPhase == Module.InputPhase.Begin)
           self.smoothener.reset();
 
+        self.pathBuilder = isNaN(self.pressure)?self.speedPathBuilder:self.pressurePathBuilder;
         var pathPart = self.pathBuilder.addPoint(self.inputPhase, pos, Date.now()/1000);
-        var smoothedPathPart = self.smoothener.smooth(pathPart, self.inputPhase == Module.InputPhase.End);
+        var smoothedPathPart = self.smoothener.smooth(pathPart, self.inputPhase === Module.InputPhase.End);
         var pathContext = self.pathBuilder.addPathPart(smoothedPathPart);
 
         self.pathPart = pathContext.getPathPart();
         self.path = pathContext.getPath();
 
-        if (self.inputPhase == Module.InputPhase.Move) {
-          var preliminaryPathPart = self.pathBuilder.createPreliminaryPath();
-          var preliminarySmoothedPathPart = self.smoothener.smooth(preliminaryPathPart, true);
+        var preliminaryPathPart = self.pathBuilder.createPreliminaryPath();
+        var preliminarySmoothedPathPart = self.smoothener.smooth(preliminaryPathPart, true);
 
-          self.preliminaryPathPart = self.pathBuilder.finishPreliminaryPath(preliminarySmoothedPathPart);
-        }
+        self.preliminaryPathPart = self.pathBuilder.finishPreliminaryPath(preliminarySmoothedPathPart);
       };
 
-      this.drawPath = function() {
-        if (self.inputPhase == Module.InputPhase.Begin) {
-          self.strokeRenderer.draw(self.pathPart, false);
-          self.strokeRenderer.blendUpdatedArea();
-        }
-        else if (self.inputPhase == Module.InputPhase.Move) {
-          self.strokeRenderer.draw(self.pathPart, false);
-          self.strokeRenderer.drawPreliminary(self.preliminaryPathPart);
+      this.drawPoint = function() {
+        self.buildPath(self.pointerPos);
 
-          self.canvas.clear(self.strokeRenderer.updatedArea, self.backgroundColor);
-          self.canvas.blend(self.userLayer, {rect: self.strokeRenderer.updatedArea});
+        self.strokeRenderer.draw(self.pathPart, false);
+        self.strokeRenderer.drawPreliminary(self.preliminaryPathPart);
 
-          self.strokeRenderer.blendUpdatedArea();
-        }
-        else if (self.inputPhase == Module.InputPhase.End) {
-          self.strokeRenderer.draw(self.pathPart, true);
-          self.strokeRenderer.blendStroke(self.userLayer, self.blend);
+        self.canvas.clearArea(self.strokeRenderer.updatedArea, self.backgroundColor);
+        self.canvas.blendWithRect(self.userLayer, self.strokeRenderer.updatedArea, Module.BlendMode.NORMAL);
 
-          self.canvas.clear(self.strokeRenderer.strokeBounds, self.backgroundColor);
-          self.canvas.blend(self.userLayer, {rect: self.strokeRenderer.strokeBounds});
-        }
+        self.strokeRenderer.blendUpdatedArea();
       };
 
       this.undo = function() {
@@ -189,35 +204,40 @@ angular.module('davinc')
 
       this.redraw = function(dirtyArea) {
         if (!dirtyArea) dirtyArea = self.canvas.bounds;
-        dirtyArea = Module.RectTools.ceil(dirtyArea);
-        self.userLayer.clear(dirtyArea);
-        self.canvas.clear(dirtyArea);
+        dirtyArea = RectTools.ceil(dirtyArea);
+
+        self.userLayer.clearArea(dirtyArea, self.backgroundColor);
+
         self.strokes.forEach(function(stroke) {
-          if (Module.RectTools.intersect(stroke.bounds, dirtyArea)) {
-            this.strokeRenderer.draw(stroke);
-            this.strokeRenderer.blendStroke(self.userLayer, stroke.blendMode);
-          }
-        }, self);
+          var affectedArea = RectTools.intersect(stroke.bounds, dirtyArea);
+          if (affectedArea) self.userLayer.draw(stroke);
+        }, this);
+
         self.refresh(dirtyArea);
       };
 
       this.refresh = function(dirtyArea) {
-        self.canvas.blend(self.userLayer, {rect: Module.RectTools.ceil(dirtyArea)});
+        if (dirtyArea)
+          self.canvas.blendWithRect(self.userLayer, RectTools.ceil(dirtyArea), Module.BlendMode.NORMAL);
+        else
+          self.canvas.blendWithMode(self.userLayer, Module.BlendMode.NORMAL);
       };
 
       this.clear = function() {
         self.strokes = [];
         self.redrawStrokesArray = [];
 
-        self.userLayer.clear();
-        self.autoDrawLayer.clear();
+        self.userLayer.clear(self.backgroundColor);
+        self.autoDrawLayer.clear(self.backgroundColor);
 
-        self.canvas.clear();
+        self.canvas.clear(self.backgroundColor);
       };
 
       this.loadAndRedraw = function(dirtyArea) {
         if (!dirtyArea) dirtyArea = self.canvas.bounds;
-        dirtyArea = Module.RectTools.ceil(dirtyArea);
+        dirtyArea = RectTools.ceil(dirtyArea);
+
+        self.autoDrawLayer.clearArea(dirtyArea, self.backgroundColor);
 
         self.drawToAutoStrokeId = 2;
         self.currentStrokeId = 0;
@@ -225,75 +245,69 @@ angular.module('davinc')
         self.redrawStroke(0);
       };
 
-      this.redrawStroke = function(strokeId) {
-        if (strokeId >= self.redrawStrokesArray.length) {
-          clearInterval(self.redrawIntervalId);
-          self.redrawIntervalId = -1;
+      this.drawAStrokeSlowly = function(stroke, start, callback, id) {
+        var points = [];
+        var end = 0;
+        if (start === 0) {
+          end = 12;
+        }
+        // next 8 points is not the end?
+        else if (start + 3 < stroke.path.points.length) {
+          // yes, do only 4 points
+          end = start + 3;
         } else {
+          // no, do from current to end
+          end = stroke.path.points.length;
+        }
+        for (var index = 0; index < end; index++) {
+          points.push(stroke.path.points[index]);
+        }
+        self.pathBuilder = isNaN(self.pressure)?self.speedPathBuilder:self.pressurePathBuilder;
+        var path = self.pathBuilder.createPath(points);
+        self.autoDrawStrokeRenderer.draw(path);
+        self.canvas.blendWithRect(self.autoDrawLayer, self.autoDrawStrokeRenderer.updatedArea, Module.BlendMode.NORMAL);
+        self.autoDrawStrokeRenderer.blendStroke(self.autoDrawLayer, Module.BlendMode.NORMAL);
+        if (end < stroke.path.points.length) {
+          $timeout( function() {
+            self.drawAStrokeSlowly(stroke, end, callback, id);
+          }, 10);
+        } else {
+          callback(id+1);
+        }
+      };
 
+      this.redrawStroke = function(strokeId) {
+        console.log(strokeId  + " >= " + self.redrawStrokesArray.length);
+        if (strokeId < self.redrawStrokesArray.length) {
           self.currentStrokeId = strokeId;
-
           var i = 0;
-
-          var color = Module.Color.from(255, 255, 255);
+          var color = Module.color.from(255, 255, 255);
           color.red = self.redrawStrokesArray[strokeId].color.red;
           color.green = self.redrawStrokesArray[strokeId].color.green;
           color.blue = self.redrawStrokesArray[strokeId].color.blue;
           color.alpha = self.redrawStrokesArray[strokeId].color.alpha;
 
           self.autoDrawStrokeRenderer.configure({brush: self.autoDrawBrush, color: color});
-
-          self.redrawIntervalId = setInterval(function() {
-
-              var stroke = self.redrawStrokesArray[strokeId];
-
-              var points = [];
-
-              var start = 0;//self.i;
-              var end = 0;
-
-              if (i === 0) {
-                end = 12;
-              }
-              // next 8 points is not the end?
-              else if (i + 3 < stroke.path.points.length) {
-                // yes, do only 4 points
-                end = i + 3;
-
-              } else {
-                // no, do from current to end
-                end = stroke.path.points.length;
-              }
-
-              for (var index = start; index < end; index++) {
-                points.push(stroke.path.points[index]);
-              }
-
-              var path = self.pathBuilder.createPath(points);
-              self.autoDrawStrokeRenderer.draw(path, true);
-              //this.context.drawBezierPath(this.bezierPath);
-
-              //self.canvas.clearArea(self.autoDrawStrokeRenderer.updatedArea, self.backgroundColor);
-              self.canvas.blendWithRect(self.canvas, self.autoDrawStrokeRenderer.updatedArea, Module.BlendMode.NORMAL_REVERSE);
-              self.autoDrawStrokeRenderer.blendUpdatedArea();
-
-
-              i = end;
-
-              self.canUpdate = true;
-
-              if (i >= stroke.path.points.length) {
-                //self.clear();
-                clearInterval(self.redrawIntervalId);
-                self.redrawIntervalId = -1;
-
-                if (strokeId + 1 < self.redrawStrokesArray.length && strokeId + 1 < self.drawToAutoStrokeId) {
-                  self.redrawStroke(strokeId + 1);
-                }
-              }
-
-          }(), 1);
+          var stroke = self.redrawStrokesArray[strokeId];
+          self.drawAStrokeSlowly(stroke, 0, self.redrawStroke, strokeId);
         }
+      };
+
+      this.loadWill = function(filename) {
+        var url = location.toString();
+        url = url.substring(0, url.lastIndexOf("/")) + "/will/" + filename;
+
+        var request = new XMLHttpRequest();
+
+        request.onreadystatechange = function() {
+           if (this.readyState == this.DONE) {
+            self.restore(this.response);
+          }
+        };
+
+        request.open("GET", url, true);
+        request.responseType = "arraybuffer";
+        request.send();
       };
 
       this.load = function(file) {
@@ -301,12 +315,30 @@ angular.module('davinc')
 
         reader.onload = function(e) {
           self.clear();
-          var strokes = Module.InkDecoder.decode(new Uint8Array(e.target.result));
+          Module.InkDecoder.getStrokeBrush = function(paint) {
+            return self.autoDrawBrush;
+          };
+          var strokes = Module.InkDecoder.decode(new Uint8Array(e.target.result), self.autoDrawBrush);
           self.redrawStrokesArray.pushArray(strokes);
           self.loadAndRedraw(strokes.dirtyArea);
+          // self.redraw(strokes.dirtyArea);
         };
 
         reader.readAsArrayBuffer(file);
+      };
+
+      this.restore = function(fileBuffer) {
+        var fileDecoder = new Module.WILLDecoder(fileBuffer);
+        fileDecoder.decode();
+        Module.InkDecoder.getStrokeBrush = function(paint) {
+          return self.autoDrawBrush;
+        };
+        var strokes = Module.InkDecoder.decode(fileDecoder.ink, self.autoDrawBrush);
+        // self.strokes.pushArray(strokes);
+        // console.log(strokes);
+        // self.redraw(strokes.dirtyArea);
+        self.redrawStrokesArray.pushArray(strokes);
+        self.loadAndRedraw(self.redrawStrokesArray.dirtyArea);
       };
 
       this.save = function() {

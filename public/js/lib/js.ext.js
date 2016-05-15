@@ -16,6 +16,8 @@ Object.defineProperty(Array.prototype, "first", {get: function() {return this[0]
 Object.defineProperty(Array.prototype, "last", {get: function() {return this[this.length-1];}});
 
 Array.prototype.contains = function(value) {return this.indexOf(value) > -1;}
+// Array.prototype.first = function() {return this[0];}
+// Array.prototype.last = function() {return this[this.length-1];}
 Array.prototype.clone = function() {var result = new Array(); this.forEach(function(value) {result.push(Object.clone(value));}); return result;}
 Array.prototype.pushArray = function() {this.push.apply(this, this.concat.apply([], arguments));}
 Array.prototype.add = function(item) {if (!this.contains(item)) return this.push(item);}
@@ -53,43 +55,45 @@ Array.protoTypedArrays = function() {
 			typedArray.prototype.toArray = function() {return Array.from(this);}
 		else
 			typedArray.prototype.toArray = function() {return Array.prototype.slice.call(this);}
-
-		typedArray.prototype.clone = function() {return new typedArray(this, this.byteOffset, this.length);}
-
-		// Safari fix, remove when possible
-		if (!typedArray.prototype.forEach) typedArray.prototype.forEach = Array.prototype.forEach;
 	});
 }
 
 Array.protoTypedArrays();
 delete Array.protoTypedArrays;
 
-ArrayBuffer.isTypedArray = function(o) {
-	return ArrayBuffer.isView(o) && !(o instanceof DataView);
-	// return !!(
-		// o instanceof Int8Array || o instanceof Uint8Array || o instanceof Uint8ClampedArray ||
-		// o instanceof Int16Array || o instanceof Uint16Array ||
-		// o instanceof Int32Array || o instanceof Uint32Array ||
-		// o instanceof Float32Array || o instanceof Float64Array
-	// );
-}
+// Float32Array.prototype.clone = function() {var result = new Float32Array(this.length); for (var i = 0; i < this.length; i++) result[i] = this[i]; return result;}
+Float32Array.prototype.clone = function() {return new Float32Array(this, this.byteOffset, this.length);}
+
+// Matrx 4 x 4
+Object.defineProperty(Array.prototype, "m00", {set: function(value) {this[0] = value;}, get: function() {return this[0];}});
+Object.defineProperty(Array.prototype, "m01", {set: function(value) {this[1] = value;}, get: function() {return this[1];}});
+Object.defineProperty(Array.prototype, "m02", {set: function(value) {this[2] = value;}, get: function() {return this[2];}});
+Object.defineProperty(Array.prototype, "m03", {set: function(value) {this[3] = value;}, get: function() {return this[3];}});
+
+Object.defineProperty(Array.prototype, "m10", {set: function(value) {this[4] = value;}, get: function() {return this[4];}});
+Object.defineProperty(Array.prototype, "m11", {set: function(value) {this[5] = value;}, get: function() {return this[5];}});
+Object.defineProperty(Array.prototype, "m12", {set: function(value) {this[6] = value;}, get: function() {return this[6];}});
+Object.defineProperty(Array.prototype, "m13", {set: function(value) {this[7] = value;}, get: function() {return this[7];}});
+
+Object.defineProperty(Array.prototype, "m20", {set: function(value) {this[8] = value;}, get: function() {return this[8];}});
+Object.defineProperty(Array.prototype, "m21", {set: function(value) {this[9] = value;}, get: function() {return this[9];}});
+Object.defineProperty(Array.prototype, "m22", {set: function(value) {this[10] = value;}, get: function() {return this[10];}});
+Object.defineProperty(Array.prototype, "m23", {set: function(value) {this[11] = value;}, get: function() {return this[11];}});
+
+Object.defineProperty(Array.prototype, "m30", {set: function(value) {this[12] = value;}, get: function() {return this[12];}});
+Object.defineProperty(Array.prototype, "m31", {set: function(value) {this[13] = value;}, get: function() {return this[13];}});
+Object.defineProperty(Array.prototype, "m32", {set: function(value) {this[14] = value;}, get: function() {return this[14];}});
+Object.defineProperty(Array.prototype, "m33", {set: function(value) {this[15] = value;}, get: function() {return this[15];}});
 
 if (!Function.name) Function.name = "Function";
 if (!Array.prototype.constructor.name) Array.prototype.constructor.name = "Array";
 
 Function.create = function(name, body) {
-	if (!body) body = function() {};
-	var args = body.getArguments();
-	var f = new Function("body", "return function " + name + "(" + args + ") {return body.apply(this, arguments);};")(body);
-	f.toString = function() {return body.toString();}
-	f.toSource = function() {return body.toSource();}
-
-	return f;
-	// return new Function("body", "return function " + name + "() {return body.apply(this, arguments);};")(body || function() {});
+	return new Function("body", "return function " + name + "() {return body.apply(this, arguments);};")(body || function() {});
 }
 
-if (!("name" in Function.prototype)) Object.defineProperty(Function.prototype, "name", {configurable: true, get: function() {var m = this.toString().match(/^function\s([\w$]+)/); return m?m[1]:"";}});
-Function.prototype.getArguments = function() {var m = this.toString().match(/\((.*?)\)/)[1].replace(/\s*/g, ""); return (m.length == 0)?[]:m.split(",");}
+Function.prototype.getName = function() {var m = this.toString().match(/^function\s(\w+)/); return m?m[1]:"anonymous";}
+Function.prototype.getArguments = function() {return this.toString().match(/\((.*)\)/)[1].replace(/\s*/g, "").split(",");}
 Function.prototype.getBody = function() {return this.toString().match(/\{([\s\S]*)\}/m)[1].replace(/^\s*\/\/.*$/mg, "");}
 
 Function.prototype.construct = function(oThis) {
@@ -135,131 +139,14 @@ Function.prototype.argsToJSON = function(defaults) {
 
 	return json;
 }
-
-Function.prototype.getInheritanceChain = function() {
-	var result = new Array();
-	var parent = this.constructor;
-
-	result.push(this.prototype.constructor);
-
-	while (parent.name != "Function") {
-		result.push(parent);
-		parent = parent.constructor;
-	}
-
-	if (parent != this.prototype.constructor)
-		result.push(parent);
-
-	return result;
-}
-
-Function.prototype.isClassMethod = function(method) {
-	var result = false;
-
-	if (method.name)
-		result = this.prototype[method.name] == method;
-	else {
-		for (var name in this.prototype) {
-			if (this.prototype[name] == method) {
-				result = true;
-				break;
-			}
-		}
-	}
-
-	return result;
-}
-
-Function.prototype.extends = function(superClass) {
-	this.prototype = Object.create(superClass.prototype);
-	this.prototype.constructor = this;
-	this.constructor = superClass.prototype.constructor;
-
-	for (var property in superClass) {
-		if (superClass.hasOwnProperty(property))
-			this[property] = superClass[property];
-	}
-
-	if (!this.prototype.$parent) {
-		Object.defineProperty(this.prototype, "super", {
-			get: function() {
-				var result;
-				var self = this;
-				var chain = this.constructor.getInheritanceChain();
-				var caller = arguments.callee.caller;
-				if (!caller) return null;
-
-				if (chain.contains(caller)) {
-					var parent = this.constructor.constructor;
-					var depth = chain.indexOf(caller);
-
-					while (depth > 0) {
-						parent = parent.constructor;
-						depth--;
-					}
-
-					result = function() {
-						parent.apply(self, arguments)
-					};
-
-					result.bind = function(name) {
-						var method = parent.prototype[name];
-						if (!method) throw new Error("super function with name '" + name + "' not found");
-
-						return function() {
-							return method.apply(self, arguments);
-						};
-					};
-				}
-				else {
-					var callerClass;
-
-					for (var i = 0; i < chain.length; i++) {
-						var clazz = chain[i];
-
-						if (clazz.isClassMethod(caller)) {
-							callerClass = clazz;
-							break;
-						}
-					}
-
-					if (!callerClass) throw new Error("super call is outside of inheritance chain");
-
-					var bind = function(name) {
-						var caller = callerClass.prototype[name];
-						var parent = callerClass.constructor;
-
-						while (parent && parent.prototype[name] == caller) {
-							parent = parent.constructor;
-							if (parent.name == "Function") parent = null;
-						}
-
-						if (!parent) throw new Error("super not found");
-
-						var method = parent.prototype[name];
-						if (!method) throw new Error("super function with name '" + name + "' not found");
-
-						return function() {
-							return method.apply(self, arguments);
-						};
-					};
-
-					result = function(name) {
-						if (!name || (typeof name != "string")) throw new Error("super function 'name' is required");
-
-						var method = bind(name);
-						return method.apply(self, Array.prototype.splice.call(arguments, 1));
-					};
-
-					result.bind = bind;
-				}
-
-				return result;
-			}
-		});
+/*
+Object.extend = function(o, data, override) {
+	for (property in data) {
+		if (!override && o[property]) o["_" + property] = o[property];
+		o[property] = data[property];
 	}
 }
-
+*/
 Object.extend = function(o, data, replace) {
 	var override = false;
 	var parent = replace?o.$parent:null;
@@ -267,32 +154,7 @@ Object.extend = function(o, data, replace) {
 	if (!parent && !replace) {
 		parent = new Object();
 		parent["$$"] = new Object();
-	}
 
-	for (property in data) {
-		if (!replace && typeof o[property] == "function") {
-			parent["$$"][property] = o[property];
-
-			(function(property) {
-				parent[property] = function() {
-					var context = this["$$"].context;
-					if (!context) throw new Error("Context not found in \"" + arguments.callee.caller.name + "\".");
-
-					return this["$$"][property].apply(context, arguments);
-				};
-			})(property);
-
-			o[property] = data[property];
-
-			override = true;
-		}
-		else if (typeof o[property] == "object")
-			Object.extend(o[property], data[property], replace);
-		else
-			o[property] = data[property];
-	}
-
-	if (override && !replace) {
 		if (!o.hasOwnProperty("super")) {
 			Object.defineProperty(o, "super", {
 				get: function() {
@@ -318,7 +180,33 @@ Object.extend = function(o, data, replace) {
 				}
 			});
 		}
+	}
 
+	for (property in data) {
+		if (typeof o[property] == "function" && parent != null) {
+			if (!replace)
+				parent["$$"][property] = o[property];
+
+			(function(property) {
+				parent[property] = Function.create(property, function() {
+					var context = this["$$"].context;
+					if (!context) throw new Error("Context not found in \"" + arguments.callee.caller.getName() + "\". Use 'bind' method with 'this' as argument.");
+
+					return this["$$"][property].apply(context, arguments);
+				});
+			})(property);
+
+			o[property] = data[property];
+
+			override = true;
+		}
+		else if (typeof o[property] == "object")
+			Object.extend(o[property], data[property], replace);
+		else
+			o[property] = data[property];
+	}
+
+	if (override && !replace) {
 		if (o.$parent) {
 			parent.$parent = o.$parent;
 			parent["$$"].lvl = o.$parent["$$"].lvl + 1;
@@ -326,10 +214,10 @@ Object.extend = function(o, data, replace) {
 			for (property in parent.$parent) {
 				if (typeof parent.$parent[property] == "function" && typeof parent[property] == "undefined") {
 					(function(property) {
-						parent[property] = function() {
+						parent[property] = Function.create(property, function() {
 							if (!this.$parent["$$"].context) this.$parent["$$"].context = this["$$"].context;
 							return this.$parent[property].apply(this.$parent, arguments);
-						};
+						});
 					})(property);
 				}
 			}
@@ -408,17 +296,6 @@ Object.clone = function(oReferance) {
 	return deepCopy(oReferance);
 }
 
-Object.nameAnonymousFunctions = function(o, constructorName) {
-	for (var name in o) {
-		if (typeof o[name] == "function" && !o[name].name) {
-			if (name == "constructor" && constructorName)
-				Object.defineProperty(o[name], "name", {value: constructorName});
-			else
-				Object.defineProperty(o[name], "name", {value: name});
-		}
-	}
-}
-
 JSON.toBase64 = function(json) {
 	return btoa(JSON.stringify(json));
 }
@@ -440,3 +317,212 @@ JSON.decode = function(bytes) {
 Math.toDegrees = function(angle) {return angle * (180 / this.PI);}
 Math.toRadians = function(angle) {return angle * (this.PI / 180);}
 Math.randomInt = function(min, max) {return Math.floor(this.random() * (max - min + 1)) + min;}
+
+HTMLElement.prototype.getInlineStyle = function(property) {
+	return this.style[property] || this.style["-webkit-" + property] || this.style["-moz-" + property] || this.style["-ms-" + property] || this.style["-o-" + property] || "";
+}
+
+HTMLElement.prototype.getStyle = function(property) {
+	var value = property;
+	var vendorPrefixed = property.startsWith("-");
+	if (vendorPrefixed) value = property.substring(1);
+
+	var arr = value.split("-");
+	for (var i = arr.length-1; i > 0; i--) arr[i] = arr[i].substring(0, 1).toUpperCase() + arr[i].substring(1);
+	value = arr.join("");
+
+	// Firefox else IE
+	var result = window.getComputedStyle?document.defaultView.getComputedStyle(this, null)[value]:this.currentStyle[value];
+
+	if (!vendorPrefixed && typeof result === "undefined") {
+		var prefixList = ["-webkit", "-moz", "-ms", "-o"];
+
+		for (var i = 0; i < prefixList.length; i++) {
+			result = this.getStyle(prefixList[i] + "-" + property);
+			if (result != "undefined") break;
+		}
+	}
+
+	return result;
+}
+
+HTMLElement.prototype.getMathStyle = function(property, inline) {
+	return inline?parseFloat(this.getInlineStyle(property)):parseFloat(this.getStyle(property));
+}
+
+HTMLElement.prototype.getTransformStyle = function(name) {
+	var result = 0;
+	var transform = this.getInlineStyle("transform");
+	var match = transform.match(new RegExp(name + "\\(.+?\\)"));
+
+	if (match) {
+		transform = match[0].substring(name.length+1, match[0].length-1);
+		var arr = transform.split(", ");
+
+		if (arr.length == 1)
+			result = parseFloat(transform) || 0;
+		else if (arr.length == 2)
+			result = {x: parseFloat(arr[0]), y: parseFloat(arr[1])};
+		else if (arr.length == 3)
+			result = {x: parseFloat(arr[0]), y: parseFloat(arr[1]), z: parseFloat(arr[2])};
+		else if (arr.length == 4)
+			result = {x: parseFloat(arr[0]), y: parseFloat(arr[1]), z: parseFloat(arr[2]), angle: parseFloat(arr[3])};
+		else {
+			result = new Array();
+
+			arr.forEach(function(value) {
+				result.push(parseFloat(value));
+			});
+		}
+	}
+
+	return result;
+}
+
+/**
+ * type xy location possible values: TL, BR, TR, BL, default is TL
+ */
+HTMLElement.prototype.toRect = function(type) {
+	var rect = new Object();
+	var alpha = this.getTransformStyle("rotate");
+	var offset = $(this).offset();
+
+	rect.width = this.getMathStyle("width");
+	rect.height = this.getMathStyle("height");
+	rect.offsetWidth = this.offsetWidth;
+	rect.offsetHeight = this.offsetHeight;
+	rect.fullWidth = this.offsetWidth + this.getMathStyle("margin-left") + this.getMathStyle("margin-right");
+	rect.fullHeight = this.offsetHeight + this.getMathStyle("margin-top") + this.getMathStyle("margin-bottom");
+	rect.center = {x: rect.width/2, y: rect.height / 2};
+
+	rect.rotationFrameWidth = rect.width*Math.abs(Math.cos(alpha)) + rect.height*Math.abs(Math.sin(alpha));
+	rect.rotationFrameHeight = rect.width*Math.abs(Math.sin(alpha)) + rect.height*Math.abs(Math.cos(alpha));
+	rect.rotationCenter = {x: rect.rotationFrameWidth/2, y: rect.rotationFrameHeight / 2};
+
+	if (this.getStyle("position") == "absolute") {
+		if ((type || "TL") == "TL") {
+			rect.left = this.getMathStyle("left");
+			rect.top = this.getMathStyle("top");
+			rect.right = rect.left + rect.width;
+			rect.bottom = rect.top + rect.height;
+
+			rect.x = rect.left;
+			rect.y = rect.top;
+		}
+		else if (type == "BR") {
+			rect.right = this.getMathStyle("right");
+			rect.bottom = this.getMathStyle("bottom");
+			rect.left = rect.right + rect.width;
+			rect.top = rect.bottom + rect.height;
+
+			rect.x = rect.right;
+			rect.y = rect.bottom;
+		}
+		else if (type == "TR") {
+			rect.right = this.getMathStyle("right");
+			rect.top = this.getMathStyle("top");
+			rect.left = rect.right + rect.width;
+			rect.bottom = rect.top + rect.height;
+
+			rect.x = rect.right;
+			rect.y = rect.top;
+		}
+		else if (type == "BL") {
+			rect.left = this.getMathStyle("left");
+			rect.bottom = this.getMathStyle("bottom");
+			rect.right = rect.left + rect.width;
+			rect.top = rect.bottom + rect.height;
+
+			rect.x = rect.left;
+			rect.y = rect.bottom;
+		}
+		else
+			throw new Error("Invalid rect type: " + type + ". Possible values: TL, BR, TR, BL");
+	}
+	else {
+		rect.left = this.offsetLeft;
+		rect.top = this.offsetTop;
+		rect.right = rect.left + rect.width;
+		rect.bottom = rect.top + rect.height;
+
+		rect.x = rect.left;
+		rect.y = rect.top;
+	}
+
+	rect.centerOnParent = {x: rect.left + rect.rotationCenter.x, y: rect.top + rect.rotationCenter.y};
+	rect.centerOnScreen = {x: offset.left + rect.rotationCenter.x, y: offset.top + rect.rotationCenter.y};
+
+	return rect;
+}
+
+HTMLImageElement.prototype.toDataURL = function(type) {
+	var canvas = document.createElement("canvas");
+	canvas.width = this.width;
+	canvas.height = this.height;
+	canvas.getContext("2d").drawImage(this, 0, 0);
+
+	return canvas.toDataURL(type || "image/png");
+}
+
+HTMLImageElement.prototype.toBlob = function(type) {
+	return new Blob([this.getBytes(type).buffer], {type: type || "image/png"});
+}
+
+HTMLImageElement.prototype.getBytes = function(type) {
+	var dataURL = this.toDataURL(type);
+	var base64 = dataURL.split(",")[1];
+	// var mime = dataURL.split(",")[0].split(":")[1].split(";")[0];
+
+	return atob(base64).toCharArray(true);
+}
+
+Image.fromBytes = function(bytes, callback, type) {
+	var image = new Image();
+
+	image.onload = function () {
+		URL.revokeObjectURL(this.src);
+		if (callback) callback.call(this);
+	}
+
+	image.src = URL.createObjectURL(new Blob([bytes.buffer], {type : "image/" + (type || "png")}));
+
+	return image;
+}
+
+CanvasRenderingContext2D.prototype.clearCanvas = function() {
+	this.clearRect(0, 0, this.canvas.width, this.canvas.height);
+}
+
+Object.defineProperty(Screen.prototype, "deviceWidth", {get: function() {
+	var width = this.width;
+
+	if (!window.matchMedia("(-webkit-device-pixel-ratio)").matches) {
+		width = Math.ceil(width * window.devicePixelRatio);
+
+		if (width % 10 != 0) {
+			if (width % 10 > 5)
+				width += (10 - width % 10);
+			else
+				width -= width % 10;
+		}
+	}
+
+	return width;
+}});
+
+Object.defineProperty(Screen.prototype, "deviceHeight", {get: function() {
+	var height = this.height;
+
+	if (!window.matchMedia("(-webkit-device-pixel-ratio)").matches) {
+		height = Math.ceil(height * window.devicePixelRatio);
+
+		if (height % 10 != 0) {
+			if (height % 10 > 5)
+				height += (10 - height % 10);
+			else
+				height -= height % 10;
+		}
+	}
+
+	return height;
+}});
