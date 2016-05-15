@@ -18,6 +18,31 @@
 
   <link rel="stylesheet" type="text/css" href="/css/davinc.css" />
 
+  <script>
+    strokes = [];
+    load = function(e) {
+      console.log(e);
+      var input = e.currentTarget;
+      var file = input.files[0];
+      var reader = new FileReader();
+
+      reader.onload = function(e) {
+        console.log(e.target.result);
+        data = e.target.result;
+        var ab = new ArrayBuffer(data.length);
+        var ia = new Uint8Array(ab);
+        for (var i = 0; i < data.length; i++) {
+          ia[i] = data.charCodeAt(i);
+        }
+        console.log(ia);
+        var strokes = Module.InkDecoder.decode(ia);
+        // strokes.pushArray(strokes);
+        console.log(strokes);
+      };
+      reader.readAsBinaryString(file);
+    }
+  </script>
+
 </head>
 
 <body ng-controller="MainCtrl">
@@ -33,6 +58,11 @@
     </div>
     <div class="tool-eraser">
       <img src="/image/icons/eraser2.png" ng-click="useEraser()" />
+    </div>
+    <div>
+      <!-- <input type="file" class="Button" onchange="angular.element(this).scope().load(this)" /> -->
+
+      <lx-file-input label="Browse..." value="state.selectedFile" change="load(e)"></lx-file-input>
     </div>
   </div>
 

@@ -2,10 +2,12 @@ angular.module('davinc')
   .controller('MainCtrl', [
 
     '$scope', '$rootScope', '$timeout',
-    '$http', '$location', 'Will',
+    '$http', '$location', 'Will', 'FileUploader',
 
     function($scope, $rootScope, $timeout,
-      $http, $location, Will) {
+      $http, $location, Will, FileUploader) {
+
+      var uploader = new FileUploader();
 
       Module.addPostScript(function() {
         Will.init(1600, 600);
@@ -21,6 +23,10 @@ angular.module('davinc')
 
       $scope.useEraser = function() {
         Will.useEraser();
+      };
+
+      $scope.load = function(e) {
+        Will.load(e);
       };
 
       window.prerenderReady = true;

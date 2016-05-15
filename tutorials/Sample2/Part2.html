@@ -21,15 +21,21 @@
 			var href;
 
 			if (content instanceof Blob)
+				console.log("blob");
 				href = URL.createObjectURL(content);
 			else {
 				var parts;
 
 				if (content instanceof ArrayBuffer)
+					console.log("ArrayBuffer");
 					parts = [content];
 				else if (content.buffer)
+					console.log("buffer");
 					parts = [content.buffer];
+					console.log(content.buffer);
+					console.log(parts);
 				else if (content instanceof Array)
+					console.log("Array");
 					parts = content;
 
 				blob = new Blob(parts, {"type": contentType || "application/octet-stream"});

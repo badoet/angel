@@ -5,6 +5,7 @@ angular.module("davinc", [
     'ngMessages',
     "ngRoute",
     "lumx",
+    'angularFileUpload',
   ])
 
   .config([
@@ -23,8 +24,6 @@ angular.module("davinc", [
   .run([
     "$rootScope", "$q", "$http", '$location', '$window', 'Modal',
     function($rootScope, $q, $http, $location, $window, Modal) {
-
-      FastClick.attach(document.body);
 
       $rootScope.modalState = {
         loadingText: "",
@@ -52,4 +51,5 @@ angular.module("davinc", [
         brush: "brush"
       };
     }
-  ]);
+  ])
+  ;

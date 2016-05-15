@@ -1,8 +1,8 @@
 angular.module('davinc')
   .service('Will', [
-    '$rootScope', "$timeout",
+    '$rootScope', "$timeout", "$q", "$http",
 
-    function($rootScope, $timeout) {
+    function($rootScope, $timeout, $q, $http) {
 
       var self = this;
 
@@ -39,6 +39,10 @@ angular.module('davinc')
 
         self.strokeRenderer = new Module.StrokeRenderer(self.canvas);
         self.useBrush(); // use brush as default
+
+        Module.InkDecoder.getStrokeBrush = function(paint) {
+          return self.brush;
+        };
       };
 
       this.useBrush = function() {
@@ -180,6 +184,27 @@ angular.module('davinc')
         self.strokes = [];
         self.userLayer.clear();
         self.canvas.clear();
+      };
+
+      this.load = function(file) {
+        var reader = new FileReader();
+
+        reader.onload = function(e) {
+          self.clear();
+          console.log(new Uint8Array(e.target.result));
+          var strokes = Module.InkDecoder.decode(new Uint8Array(e.target.result));
+          console.log(strokes);
+          self.strokes.pushArray(strokes);
+          console.log(strokes);
+          self.redraw(strokes.bounds);
+        };
+
+        reader.readAsArrayBuffer(file);
+      };
+
+      this.save = function() {
+        var data = Module.InkEncoder.encode(self.strokes);
+        saveAs(data, "export.data", "application/octet-stream");
       };
 
       return this;
