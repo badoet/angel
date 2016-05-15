@@ -3,16 +3,16 @@ body {
   overflow: hidden !important;
   margin: 0;
   padding: 0;
-  background: url("/image/bg_white_paper.jpg") $white no-repeat;
+  background: url("../image/bg_white_paper.jpg") $white no-repeat;
   background-size: cover;
 }
 canvas {
   border: 0px none;
   &.brush {
-    cursor: url("/image/icons/brush.png") 0 64, pointer;
+    cursor: url("../image/icons/brush.png") 0 64, pointer;
   }
   &.eraser {
-    cursor: url("/image/icons/eraser.png") 0 56, pointer;
+    cursor: url("../image/icons/eraser.png") 0 56, pointer;
   }
 }
 h2, p {margin-left: 20px;}

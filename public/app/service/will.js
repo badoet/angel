@@ -155,7 +155,7 @@ angular.module('davinc')
 
       this.undo = function() {
         removedStroke = self.strokes.pop();
-        self.redraw(removedStroke.bounds);
+        if(removedStroke) self.redraw(removedStroke.bounds);
       };
 
       this.redraw = function(dirtyArea) {
