@@ -6,15 +6,24 @@ angular.module('davinc')
 
       var self = this;
 
-      self.backgroundColor = Module.Color.TRANSPERENT;
-      self.brushColor = Module.Color.from(204, 204, 204);
-      self.eraserColor =  Module.Color.from(255, 255, 255);
 
-      self.color = self.brushColor;
       self.strokes = [];
+      self.redrawStrokesArray = [];
+
       var canvas = document.getElementById("canvas");
 
       this.init = function(width, height) {
+        self.drawToAutoStrokeId = 0;
+        self.currentStrokeId = 0;
+        self.redrawIntervalId = -1;
+        self.canUpdate = false;
+
+        self.backgroundColor = Module.Color.TRANSPERENT;
+        self.brushColor = Module.Color.from(204, 204, 204);
+        self.eraserColor =  Module.Color.from(255, 255, 255);
+
+        self.color = self.brushColor;
+
         self.initInkEngine(width, height);
         self.initEvents();
       };
@@ -23,9 +32,17 @@ angular.module('davinc')
 
         self.canvas = new Module.InkCanvas(canvas, width, height);
         self.teacherLayer = self.canvas.createLayer();
+        self.autoDrawLayer = self.canvas.createLayer();
         self.userLayer = self.canvas.createLayer();
 
-        self.clear();
+        // self.clear();
+
+
+        // init auto draw brush
+        self.autoDrawBrush = new Module.DirectBrush();
+        //this.autoDrawStrokeRenderer = new Module.StrokeRenderer(this.canvas, this.autoDrawLayer);
+        self.autoDrawStrokeRenderer = new Module.StrokeRenderer(self.canvas, self.canvas);
+        self.autoDrawStrokeRenderer.configure({brush: self.autoDrawBrush, color: this.color});
 
         self.blendNormal = Module.BlendMode.NORMAL;
         self.blendErase = Module.BlendMode.ERASE;
@@ -102,6 +119,14 @@ angular.module('davinc')
       };
 
       this.endStroke = function(e) {
+        if (self.redrawStrokesArray.length > 0 && self.canUpdate === true) {
+          self.drawToAutoStrokeId += 2;
+        }
+
+        if (self.redrawIntervalId == -1) {
+          self.redrawStroke(self.currentStrokeId);
+        }
+
         if (!self.inputPhase) return;
 
         self.inputPhase = Module.InputPhase.End;
@@ -182,8 +207,93 @@ angular.module('davinc')
 
       this.clear = function() {
         self.strokes = [];
+        self.redrawStrokesArray = [];
+
         self.userLayer.clear();
+        self.autoDrawLayer.clear();
+
         self.canvas.clear();
+      };
+
+      this.loadAndRedraw = function(dirtyArea) {
+        if (!dirtyArea) dirtyArea = self.canvas.bounds;
+        dirtyArea = Module.RectTools.ceil(dirtyArea);
+
+        self.drawToAutoStrokeId = 2;
+        self.currentStrokeId = 0;
+
+        self.redrawStroke(0);
+      };
+
+      this.redrawStroke = function(strokeId) {
+        if (strokeId >= self.redrawStrokesArray.length) {
+          clearInterval(self.redrawIntervalId);
+          self.redrawIntervalId = -1;
+        } else {
+
+          self.currentStrokeId = strokeId;
+
+          var i = 0;
+
+          var color = Module.Color.from(255, 255, 255);
+          color.red = self.redrawStrokesArray[strokeId].color.red;
+          color.green = self.redrawStrokesArray[strokeId].color.green;
+          color.blue = self.redrawStrokesArray[strokeId].color.blue;
+          color.alpha = self.redrawStrokesArray[strokeId].color.alpha;
+
+          self.autoDrawStrokeRenderer.configure({brush: self.autoDrawBrush, color: color});
+
+          self.redrawIntervalId = setInterval(function() {
+
+              var stroke = self.redrawStrokesArray[strokeId];
+
+              var points = [];
+
+              var start = 0;//self.i;
+              var end = 0;
+
+              if (i === 0) {
+                end = 12;
+              }
+              // next 8 points is not the end?
+              else if (i + 3 < stroke.path.points.length) {
+                // yes, do only 4 points
+                end = i + 3;
+
+              } else {
+                // no, do from current to end
+                end = stroke.path.points.length;
+              }
+
+              for (var index = start; index < end; index++) {
+                points.push(stroke.path.points[index]);
+              }
+
+              var path = self.pathBuilder.createPath(points);
+              self.autoDrawStrokeRenderer.draw(path, true);
+              //this.context.drawBezierPath(this.bezierPath);
+
+              //self.canvas.clearArea(self.autoDrawStrokeRenderer.updatedArea, self.backgroundColor);
+              self.canvas.blendWithRect(self.canvas, self.autoDrawStrokeRenderer.updatedArea, Module.BlendMode.NORMAL_REVERSE);
+              self.autoDrawStrokeRenderer.blendUpdatedArea();
+
+
+              i = end;
+
+              self.canUpdate = true;
+
+              if (i >= stroke.path.points.length) {
+                //self.clear();
+                clearInterval(self.redrawIntervalId);
+                self.redrawIntervalId = -1;
+
+                if (strokeId + 1 < self.redrawStrokesArray.length && strokeId + 1 < self.drawToAutoStrokeId) {
+                  self.redrawStroke(strokeId + 1);
+                }
+              }
+
+          }(), 1);
+        }
       };
 
       this.load = function(file) {
@@ -191,12 +301,9 @@ angular.module('davinc')
 
         reader.onload = function(e) {
           self.clear();
-          console.log(new Uint8Array(e.target.result));
           var strokes = Module.InkDecoder.decode(new Uint8Array(e.target.result));
-          console.log(strokes);
-          self.strokes.pushArray(strokes);
-          console.log(strokes);
-          self.redraw(strokes.bounds);
+          self.redrawStrokesArray.pushArray(strokes);
+          self.loadAndRedraw(strokes.dirtyArea);
         };
 
         reader.readAsArrayBuffer(file);

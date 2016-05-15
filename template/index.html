@@ -18,6 +18,17 @@
 
   <link rel="stylesheet" type="text/css" href="/css/davinc.css" />
 
+  <script src="/js/lib/lib.min.js"></script>
+
+  <script type="text/javascript" src="/js/lib/js.ext.js"></script>
+  <script type="text/javascript" src="/js/lib/js.ext.dom.js"></script>
+
+  <script type="text/javascript" src="/js/lib/Module.js"></script>
+  <script async type="text/javascript" src="/js/lib/WacomInkEngine.js"></script>
+
+  <script type="text/javascript" src='/js/lib/requestAnimationFrame.js'></script>
+  <script type="text/javascript" src="/js/lib/modernizr-custom.js"></script>
+
   <script>
     strokes = [];
     load = function(e) {
@@ -68,16 +79,7 @@
 
   <canvas id="canvas" width="1600" height="600" ng-class="$root.state.brush"></canvas>
 
-  <script src="/js/lib/lib.min.js"></script>
 
-  <script type="text/javascript" src="/js/lib/js.ext.js"></script>
-  <script type="text/javascript" src="/js/lib/js.ext.dom.js"></script>
-
-  <script type="text/javascript" src="/js/lib/Module.js"></script>
-  <script async type="text/javascript" src="/js/lib/WacomInkEngine.js"></script>
-
-  <script type="text/javascript" src='/js/lib/requestAnimationFrame.js'></script>
-  <script type="text/javascript" src="/js/lib/modernizr-custom.js"></script>
 
   <!-- build:js /js/app.min.js -->
     <script src="/app/app.js"></script>

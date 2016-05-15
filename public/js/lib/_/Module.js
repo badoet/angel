@@ -59,28 +59,28 @@ Module.initMemoryInitializerPrefixURL = (function() {
 Module.addPostScript(function() {
 	Object.defineProperty(Module.VectorFloat.prototype, "length", {get: function() {return this.size();}});
 	Object.defineProperty(Module.VectorUnsignedInt.prototype, "length", {get: function() {return this.size();}});
-	Object.defineProperty(Module.PathBuilder.prototype, "stride", {get: function() {return this.calculateStride();}});
+	Object.defineProperty(Module.PathBuilder.prototype, "stride", {get: function() {return this.getStride();}});
 	Object.defineProperty(Module.InkDecoder.prototype, "path", {get: function() {return {points: this.getPoints(), stride: this.ink.stride};}});
 	Object.defineProperty(Module.InkDecoder.prototype, "paint", {get: function() {return this.ink.paint.null?null:this.ink.paint.value;}});
 
 	Module.VectorFloat.fromFloat32Array = function(af32) {
 		var result = new Module.VectorFloat();
-		// result.resize(af32.length, 0);
-		// for (var i = 0; i < af32.length; i++) result.set(i, af32[i]);
 		for (var i = 0; i < af32.length; i++) result.push(af32[i]);
 		return result;
 	}
 
 	Module.VectorUnsignedInt.fromUint32Array = function(ui32) {
 		var result = new Module.VectorUnsignedInt();
-		// result.resize(ui32.length, 0);
 		for (var i = 0; i < ui32.length; i++) result.push(ui32[i]);
-		// for (var i = 0; i < ui32.length; i++) result.set(i, ui32[i]);
 		return result;
 	}
 
 	Object.extend(Module.VectorFloat.prototype, {
 		push: Module.VectorFloat.prototype.push_back,
+
+		withSize: function(size) {
+			for (var i = 0; i < size; i++) this.push(0);
+		},
 
 		equals: function(vec) {
 			var result = this.size() == vec.size();
@@ -295,77 +295,7 @@ Module.addPostScript(function() {
 			Module.useVectoredFloat32Array(function(points) {
 				this.nativeFillPath(points, path.stride, color, antiAliasing);
 			}, this, path.points);
-		}),
-
-		/*
-			{
-				Mode: Module.BlendMode,
-				Rect: Module.Rectangle,
-				SourceRect: Module.Rectangle,
-				DestinationRect: Module.Rectangle,
-				Transform: Module.Mat4,
-				SourceTransform: Module.Mat4,
-				DestinationTransform: Module.Mat4,
-			}
-		*/
-		blend: Function.create("GenericLayer$blend", function(source, options) {
-			this.super.blend(source, options || {});
-
-			//////// delete on next release
-			if (options && options.type && options.type == "BlendMode") {
-				options = {Mode: options};
-				console.warn("Layer$blend method usage with second parameter BlendMode is deprecated. It will be removed soon. Please use BlendOptions as second parameter.");
-			}
-
-			if (!options) options = {};
-			if (!options["Mode"]) options["Mode"] = Module.BlendMode.NORMAL;
-
-			if (options["SourceTransform"] && options["DestinationTransform"]) {
-				if (options["SourceRect"] && options["DestinationRect"])
-					this.blendWithRectsTransform(source, options["SourceRect"], options["SourceTransform"], options["DestinationRect"], options["DestinationTransform"], options["Mode"]);
-				else
-					throw new Error("With SourceTransform and DestinationTransform - SourceRect and DestinationRect are required");
-			}
-			else if (options["Transform"]) {
-				if (options["Rect"])
-					this.blendWithRectTransform(source, options["Rect"], options["Transform"], options["Mode"]);
-				else
-					this.blendWithTransform(source, options["Transform"], options["Mode"]);
-			}
-			else if (options["SourceRect"] && options["DestinationRect"])
-				this.blendWithRects(source, options["SourceRect"], options["DestinationRect"], options["Mode"]);
-			else if (options["Rect"])
-				this.blendWithRect(source, options["Rect"], options["Mode"]);
-			else
-				this.blendWithMode(source, options["Mode"]);
-		}),
-
-		readPixels: function(rect) {
-			if (!rect) rect = this.bounds;
-
-			var int64Ptr = new Object();
-			int64Ptr.length = rect.width * rect.height * 4;
-
-			var ptr = Module._malloc(int64Ptr.length);
-			int64Ptr.ptr = ptr;
-
-			this.nativeReadPixels(int64Ptr.ptr, rect);
-
-			var bytes = Module.readBytes(int64Ptr);
-			Module._free(ptr);
-
-			return bytes;
-		},
-
-		writePixels: function(bytes, rect) {
-			if (!bytes) throw new Error("GenericLayer$writePixels 'bytes' parameter is required");
-			if (!(bytes instanceof Uint8Array)) throw new Error("GenericLayer$writePixels 'bytes' parameter is not instance of Uint8Array");
-			if (!rect) rect = this.bounds;
-
-			Module.writeBytes(bytes, function(int64Ptr) {
-				this.nativeWritePixels(int64Ptr.ptr, rect);
-			}, this);
-		}
+		})
 	});
 
 	Object.extend(Module.Intersector.prototype, {
@@ -514,9 +444,6 @@ Module.addPostScript(function() {
 			if (!images) throw new Error("Texture images not found");
 
 			images.forEach(function(image) {
-				// do not encode auto generated images
-				if (image.src.startsWith("data:")) return;
-
 				var bytes = image.getBytes();
 				var ptr = Module._malloc(bytes.length);
 				var int64Ptr = {ptr: ptr, length: bytes.length};
@@ -610,11 +537,8 @@ Module.addPostScript(function() {
 		encodeComposePathPart: Function.create("PathOperationEncoder$encodeComposePathPart", function(path, color, variableWidth, variableColor, endStroke) {
 			this.super.encodeComposePathPart.apply(this.super, arguments);
 
-			if (path.points.length > 0) {
-				Module.useVectoredFloat32Array(function(points) {
-					this.nativeComposePathPart(points, color, variableWidth, variableColor, endStroke);
-				}, this, path.points);
-			}
+			if (path.points.length > 0)
+				this.nativeComposePathPart(path.points, color, variableWidth, variableColor, endStroke);
 		}),
 
 		encodeAdd: Function.create("PathOperationEncoder$encodeAdd", function(strokes) {
@@ -941,10 +865,6 @@ Module.color = {
 	 */
 	toHex: function(color) {
 		return "#" + color.red.toString(16).pad(2, "0") + color.green.toString(16).pad(2, "0") + color.blue.toString(16).pad(2, "0");
-	},
-
-	random: function(alpha) {
-		return {red: Math.randomInt(0, 255), green: Math.randomInt(0, 255), blue: Math.randomInt(0, 255), alpha: alpha?Math.random():1};
 	}
 };
 
@@ -1173,15 +1093,6 @@ Object.extend(Module.Stroke.prototype, {
 	},
 
 	/**
-	 * When stroke path is modified, bounds should be updated
-	 *
-	 * @method Module.Stroke.prototype.updateBounds
-	 */
-	updateBounds: function() {
-		this.path.calculateBounds(this.width);
-	},
-
-	/**
 	 * Split stroke
 	 *
 	 * @method Module.Stroke.prototype.split
@@ -1267,10 +1178,10 @@ Object.extend(Module.Stroke.prototype, {
 
 		for (var i = 0; i < this.path.length; i++) {
 			var pt = this.path.get(i);
-			var tpt = Module.Mat4.transformPoint(pt, mat);
+			var v = Module.Mat4.transformVec2WithMat4(pt, mat);
 
-			pt.x = tpt.x;
-			pt.y = tpt.y;
+			pt.x = v.x;
+			pt.y = v.y;
 			pt.width *= sx;
 
 			this.path.set(i, pt);
@@ -1419,9 +1330,6 @@ Object.extend(Module.StrokeRenderer.prototype, {
 	 * @param {boolean} [endCap] applicable only when path is Module.Path, when true caps end of stroke, but do not completes stroke rendering
 	 */
 	draw: function(path, endStroke, endCap) {
-		if (this.layer.isDeleted())
-			throw new Error("StrokeRenderer cannot draw, it is already deleted");
-
 		if (this.restart) {
 			if (!this.brush) throw new Error("StrokeRenderer requires 'brush' to be configured");
 			if (!this.color) throw new Error("StrokeRenderer requires 'color' to be configured");
@@ -1594,16 +1502,6 @@ Object.extend(Module.StrokeRenderer.prototype, {
 	 */
 	toStroke: function(path) {
 		return new Module.Stroke(this.brush, path, this.width, this.color, 0, 1, this.randomSeed, this.blendMode);
-	},
-
-	delete: function() {
-		if (this.ownLayer) {
-			this.layer.delete();
-			if (this.preliminaryLayer) this.preliminaryLayer.delete();
-		}
-
-		if (this.strokeLastRendererdDrawContext) this.strokeLastRendererdDrawContext.delete();
-		if (this.strokePrelimLastRenderedDrawContext) this.strokePrelimLastRenderedDrawContext.delete();
 	}
 });
 
@@ -1944,18 +1842,6 @@ var RectTools = {
 		}
 		else
 			return null;
-	},
-
-	getPath: function(rect) {
-		return Module.PathBuilder.createPath([
-			rect.left, rect.top,
-			rect.left, rect.top,
-			rect.right, rect.top,
-			rect.right, rect.bottom,
-			rect.left, rect.bottom,
-			rect.left, rect.top,
-			rect.left, rect.top,
-		], 2);
 	}
 };
 
@@ -1970,55 +1856,25 @@ var GLTools = {
 	 * Upon successful creation of an identifier, the resource is added to a specific collection
 	 * in the GL namespace (defined in WacomInkEngine.js) and is globally accessible from there.
 	 *
-	 * @param {(WebGLBuffer | WebGLRenderbuffer | WebGLFramebuffer | WebGLTexture | WebGLProgram | WebGLShader)} glResource
+	 * @param {(WebGLBuffer | WebGLFramebuffer | WebGLRenderbuffer | WebGLTexture)} glResource
 	 */
 	indexGLResource: function(glResource) {
-		var resources;
+		var idxPool;
 
 		if (glResource instanceof WebGLBuffer)
-			resources = GL.buffers;
-		else if (glResource instanceof WebGLRenderbuffer)
-			resources = GL.renderbuffers;
+			idxPool = GL.buffers;
 		else if (glResource instanceof WebGLFramebuffer)
-			resources = GL.framebuffers;
+			idxPool = GL.framebuffers;
+		else if (glResource instanceof WebGLRenderbuffer)
+			idxPool = GL.renderbuffers;
 		else if (glResource instanceof WebGLTexture)
-			resources = GL.textures;
-		else if (glResource instanceof WebGLProgram)
-			resources = GL.programs;
-		else if (glResource instanceof WebGLShader)
-			resources = GL.shaders;
-		else
-			throw new Error("Cannot index this GL resource");
+			idxPool = GL.textures;
 
-		var id = GL.getNewId(resources);
+		var idx = GL.counter;
+		GL.counter++;
 
-		glResource.name = id;
-		resources[id] = glResource;
-	},
-
-	/**
-	 * Used for interoperability between WebGL and WILL SDK.
-	 * Creates texture with predifined configuration.
-	 *
-	 * @param {int} [wrapMode=CLAMP_TO_EDGE] texture parameter for TEXTURE_WRAP_S and TEXTURE_WRAP_T
-	 * @param {int} [sampleMode=NEAREST] texture parameter for TEXTURE_MIN_FILTER and TEXTURE_MAG_FILTER
-	 */
-	createTexture: function(wrapMode, sampleMode) {
-		if (!wrapMode) wrapMode = GLctx.CLAMP_TO_EDGE;
-		if (!sampleMode) sampleMode = GLctx.NEAREST;
-
-		var texture = GLctx.createTexture();
-
-		GLctx.bindTexture(GLctx.TEXTURE_2D, texture);
-		GLctx.texParameteri(GLctx.TEXTURE_2D, GLctx.TEXTURE_WRAP_S, wrapMode);
-		GLctx.texParameteri(GLctx.TEXTURE_2D, GLctx.TEXTURE_WRAP_T, wrapMode);
-		GLctx.texParameteri(GLctx.TEXTURE_2D, GLctx.TEXTURE_MIN_FILTER, sampleMode);
-		GLctx.texParameteri(GLctx.TEXTURE_2D, GLctx.TEXTURE_MAG_FILTER, sampleMode);
-		GLctx.bindTexture(GLctx.TEXTURE_2D, null);
-
-		GLTools.indexGLResource(texture);
-
-		return texture;
+		glResource.name = idx;
+		idxPool[idx] = glResource;
 	},
 
 	/**
